@@ -1,11 +1,8 @@
 package PlanetaryDefense.PDCrawler;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.util.Date;
+import java.util.UUID;
 import java.util.regex.Pattern;
+import java.sql.*;
 
 import org.apache.commons.lang.StringEscapeUtils;
 
@@ -21,36 +18,22 @@ import edu.uci.ics.crawler4j.url.WebURL;
 public class MyCrawler extends WebCrawler{
   private final static Pattern FILTERS = Pattern.compile(".*(\\.(css|js|gif|jpg"
       + "|png|mp3|mp3|zip|gz))$");
-  public static BufferedWriter bw = pre();
+  public static Connection connection = DBConnector.getDBconnection("postgres", "admin", "pd");
+
 
   public MyCrawler() {
   }
 
-  public static BufferedWriter pre()
-  {
-    File file = new File("C:/cralwer_PDPages/crawlerPages.csv");
-    if (file.exists()) {
-      file.delete();
-    }
-
-    BufferedWriter bwl = null;
-    try {
-      file.createNewFile();
-      FileWriter fw = new FileWriter(file.getAbsoluteFile());
-      bwl = new BufferedWriter(fw); 
-      bwl.write("URL, Title, Content, fileType, Collected time" + "\n");
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
-    return bwl;
+  private static java.sql.Timestamp getCurrentTimeStamp() {
+    java.util.Date today = new java.util.Date();
+    return new java.sql.Timestamp(today.getTime());
   }
 
   @Override
   public boolean shouldVisit(Page referringPage, WebURL url) {
     String href = url.getURL().toLowerCase();
     return !FILTERS.matcher(href).matches()
-        && !href.contains("http://ssd.jpl.nasa.gov/sbdb.cgi?sstr=")
-        && href.startsWith("http://neo.jpl.nasa.gov/") && !href.contains("http://ssd.jpl.nasa.gov/sbdb.cgi?sstr=");
+        && !href.contains("http://ssd.jpl.nasa.gov/sbdb.cgi?sstr=");
   }
 
   /**
@@ -64,10 +47,27 @@ public class MyCrawler extends WebCrawler{
       HtmlParseData htmlParseData = (HtmlParseData) page.getParseData();
       String text = htmlParseData.getText();
       text = text.replaceAll("[^\\S\\r\\n]+", " ").replaceAll("\\n+", " ").replaceAll("\\s+", " ");
-      try {
-        bw.write(url + "," + StringEscapeUtils.escapeCsv(htmlParseData.getTitle()) + "," + StringEscapeUtils.escapeCsv(text) + "," + "Web page" + "," + new Date() + "\n");
-      } catch (IOException e) {
-        e.printStackTrace();
+      String title = htmlParseData.getTitle();
+      if(title!=null)
+      {
+        try {
+          if (connection != null) {               
+            String myStatement = " INSERT INTO webpages (id, title, url, content, date) VALUES (?,?,?,?,?)";
+            PreparedStatement st= connection.prepareStatement(myStatement);
+            String uniqueID = UUID.randomUUID().toString();
+            st.setString(1, uniqueID);
+            st.setString(2, StringEscapeUtils.escapeCsv(title));
+            st.setString(3, url);
+            st.setString(4, StringEscapeUtils.escapeCsv(text));
+            st.setTimestamp(5, getCurrentTimeStamp());
+            st.executeUpdate();
+            st.close();
+          } else {
+            System.out.println("Failed to make connection!");
+          }
+        } catch (SQLException e) {
+          e.printStackTrace();
+        }
       }
     }
   }

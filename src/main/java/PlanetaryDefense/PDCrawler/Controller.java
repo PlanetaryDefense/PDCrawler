@@ -15,7 +15,6 @@ import edu.uci.ics.crawler4j.robotstxt.RobotstxtServer;
  */
 public class Controller {
   public Controller() {
-    // TODO Auto-generated constructor stub
   }
 
   public static void main(String[] args) throws Exception {
@@ -26,12 +25,12 @@ public class Controller {
       crawlStorageFolder = "C:/crawlertest/root";
     }
 
-    int numberOfCrawlers = 8;
+    int numberOfCrawlers = 16;
 
     CrawlConfig config = new CrawlConfig();
     config.setCrawlStorageFolder(crawlStorageFolder);
-    config.setMaxDepthOfCrawling(50);
-    config.setMaxPagesToFetch(1000);
+    config.setMaxDepthOfCrawling(100);
+    config.setMaxPagesToFetch(100000);
     config.setResumableCrawling(false);
 
     /*IMPORTANT CONFIG OPTIONS
@@ -68,7 +67,7 @@ public class Controller {
     will reach the line after this only when crawling is finished.*/
 
     controller.start(MyCrawler.class, numberOfCrawlers);
-    MyCrawler.bw.close();
+    MyCrawler.connection.close();
     //print out full configuration
     //config.toString(); 
   }

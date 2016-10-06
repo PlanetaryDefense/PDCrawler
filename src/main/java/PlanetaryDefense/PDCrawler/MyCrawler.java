@@ -18,8 +18,8 @@ import edu.uci.ics.crawler4j.url.WebURL;
 public class MyCrawler extends WebCrawler{
   private final static Pattern FILTERS = Pattern.compile(".*(\\.(css|js|gif|jpg"
       + "|png|mp3|mp3|zip|gz))$");
-  public static Connection connection = DBConnector.getDBconnection("postgres", "admin", "pd");
-
+  //public static Connection connection = DBConnector.getDBconnection("postgres", "admin", "pd");
+  public static Connection connection = DBConnector.getDBconnection("postgres", "a7d6m5i4n362J", "drupal");
 
   public MyCrawler() {
   }
@@ -59,7 +59,7 @@ public class MyCrawler extends WebCrawler{
             st.setString(2, StringEscapeUtils.escapeCsv(title));
             st.setString(3, url);
             st.setString(4, StringEscapeUtils.escapeCsv(text));
-            st.setTimestamp(5, getCurrentTimeStamp());
+            st.setString(5, getCurrentTimeStamp().toString());
             st.executeUpdate();
             st.close();
           } else {
